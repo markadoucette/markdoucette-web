@@ -297,9 +297,9 @@ const SmartTicketAnalyzer = () => {
     results: null
   });
 
-  // Update code when inputs change
+  // Update code when inputs change - CLEANED VERSION
   useEffect(() => {
-    console.log('🔄 useEffect TRIGGERED - generating code:', {
+    console.log('🔄 useEffect TRIGGERED - CLEAN VERSION:', {
       currentStep: appState.currentStep,
       ticketDescription: appState.userInputs.ticketDescription.substring(0, 30),
       soConfigSortBy: appState.soConfig?.sortBy,
@@ -308,7 +308,9 @@ const SmartTicketAnalyzer = () => {
     
     const currentStep = appState.currentStep;
     let apiCall = '// Default code for step ' + currentStep;
-    let promptCode = '// Default prompt code';
+    
+    // Only generate Stack Overflow and GitHub code here
+    // AI prompt code is now generated directly in getCurrentCode()
     
     if (currentStep >= 2) {
       const answeredFilter = appState.soConfig?.answeredOnly ? '&answered=true' : '';
@@ -375,72 +377,16 @@ const searchGitHub = async () => {
 };`;
     }
     
-    // Generate AI prompt code
-    if (currentStep >= 5) {
-      console.log('🔄 GENERATING ENHANCED PROMPT CODE with config:', {
-        model: appState.aiConfig?.model,
-        temperature: appState.aiConfig?.temperature,
-        maxTokens: appState.aiConfig?.maxTokens
-      });
-      
-      promptCode = `// AI Analysis Request - Enhanced Version
-const analyzeWithAI = async (ticketData, apiResults) => {
-  const prompt = \`You are a senior technical support engineer analyzing a customer issue.
-
-Issue Details:
-- Description: "\${ticketData.ticketDescription}"
-- Priority: \${ticketData.priority}  
-- Customer Tier: \${ticketData.customerTier}
-- Tech Stack: \${ticketData.techStack.join(', ')}
-
-Context from APIs:
-- Stack Overflow Results: \${apiResults.stackOverflow?.items?.length || 0} questions
-- GitHub Code Examples: \${apiResults.github?.items?.length || 0} files
-
-Based on the above context, provide solutions as structured JSON.
-
-${appState.aiConfig?.includeCodeExamples ? 'Include code examples where helpful.' : 'Focus on conceptual solutions without code examples.'}
-${appState.aiConfig?.includeStepByStep ? 'Provide detailed step-by-step instructions.' : 'Provide high-level guidance only.'}\`;
-
-  console.log('AI Request Configuration:', {
-    model: '${appState.aiConfig?.model || 'gpt-4'}',
-    temperature: ${appState.aiConfig?.temperature ?? 0.3},
-    maxTokens: ${appState.aiConfig?.maxTokens || 1500},
-    codeExamples: ${appState.aiConfig?.includeCodeExamples ?? true},
-    stepByStep: ${appState.aiConfig?.includeStepByStep ?? true}
-  });
-
-  const response = await fetch('/api/ai-analyze', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: '${appState.aiConfig?.model || 'gpt-4'}',
-      prompt: prompt,
-      temperature: ${appState.aiConfig?.temperature ?? 0.3},
-      max_tokens: ${appState.aiConfig?.maxTokens || 1500},
-      include_code_examples: ${appState.aiConfig?.includeCodeExamples ?? true},
-      include_step_by_step: ${appState.aiConfig?.includeStepByStep ?? true}
-    })
-  });
-
-  return response.json();
-};`;
-      
-      console.log('🔄 GENERATED PROMPT CODE LENGTH:', promptCode.length);
-    }
-    
-    setAppState(prev => {
-      console.log('🔄 UPDATING STATE with new prompt code length:', promptCode.length);
-      return {
-        ...prev,
-        generatedCode: {
-          ...prev.generatedCode,
-          apiCall: apiCall,
-          prompt: promptCode,
-          implementation: 'Direct implementation for step ' + currentStep
-        }
-      };
-    });
+    console.log('🔄 CLEAN UPDATE - Only API code, no prompt generation');
+    setAppState(prev => ({
+      ...prev,
+      generatedCode: {
+        ...prev.generatedCode,
+        apiCall: apiCall,
+        prompt: 'Generated directly by getCurrentCode',
+        implementation: 'Implementation for step ' + currentStep
+      }
+    }));
   }, [
     appState.currentStep, 
     appState.userInputs.ticketDescription,
