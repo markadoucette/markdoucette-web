@@ -81,22 +81,22 @@ const AboutMe = () => {
           <div className="grid md:grid-cols-3 gap-8 items-start">
             <div className="md:col-span-2 space-y-4">
               <h2 className="text-3xl font-bold text-gray-900 mb-6">About Me</h2>
-              <p className="text-gray-600 mb-4 text-justify">
+              <p className="text-gray-600 mb-4 text-left md:text-justify">
                 A Denver native, I found my way to San Antonio in 2011 when I joined Rackspace, and this historic city has become home. My passion for building extends far beyond the digital realm—my wife and I have lovingly restored our 1910 craftsman home, preserving its century-old character while bringing it into the modern era. My latest creation is a unique workshop built from two shipping containers topped with a rooftop deck, where I spend countless hours tinkering and bringing ideas to life.
               </p>
-              <p className="text-gray-600 mb-4 text-justify">
+              <p className="text-gray-600 mb-4 text-left md:text-justify">
                 When I'm not solving data puzzles or working in my workshop, I'm spending time with my wife and our two energetic boys (4 and 3 years old). Life is a wonderful balance of family, building, and technical innovation.
               </p>
-              <p className="text-gray-600 mb-4 text-justify">
+              <p className="text-gray-600 mb-4 text-left md:text-justify">
                 I have over 18 years of experience in data and analytics, with expertise spanning sales and marketing, operations, product, and user experience. 
                 I am a jack of all trades with a diverse background, and my passion is strategy through the use of data. 
                 I enjoy working for smaller companies because of the ability to wear many hats to accomplish the goals at hand.
               </p>
-              <p className="text-gray-600 mb-4 text-justify">
+              <p className="text-gray-600 mb-4 text-left md:text-justify">
                 An ideal role for me would be one where I am able to use data and technology to solve problems and plan for the future. 
                 With all of the companies I have worked for, those are two areas that always need attention.
               </p>
-              <p className="text-gray-600 text-justify">
+              <p className="text-gray-600 mb-4 text-left md:text-justify">
                 On the personal side, I am an avid Bronco fan, have a passion for the outdoors, bikes, food, and good beer. 
                 On the weekend you can probably find me riding my old-fashioned penny-farthing throughout downtown San Antonio.
               </p>
