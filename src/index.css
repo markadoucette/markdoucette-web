@@ -30,4 +30,16 @@
   .section-padding {
     @apply py-16 px-4;
   }
+
+
+}
+
+@keyframes rotate-phone {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.animate-rotate-phone {
+  animation: rotate-phone 2s ease-in-out infinite;
 }
