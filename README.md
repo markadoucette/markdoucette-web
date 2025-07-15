@@ -37,7 +37,7 @@ As a data and AI professional with 18+ years of experience, I wanted to create a
 
 - **AWS Amplify** - Hosting and CI/CD
 - **GitHub** - Version control and source
-- **Custom Domain** - Professional URL (optional)
+- **Custom Domain** - Professional URL
 
 ## Features
 
@@ -203,15 +203,6 @@ AWS Amplify supports custom domains with automatic SSL certificates.
 - Efficient component structure to avoid unnecessary re-renders
 - Strategic use of images and icons
 
-## Future Enhancements
-
-- [ ] Add dark mode toggle
-- [ ] Implement blog section for technical articles
-- [ ] Add analytics tracking
-- [ ] Create downloadable project case studies
-- [ ] Add contact form functionality
-- [ ] Implement SEO optimizations
-
 ## Contributing
 
 While this is a personal portfolio, I welcome feedback and suggestions! Feel free to:
@@ -235,5 +226,3 @@ This project is open source and available under the [MIT License](LICENSE).
 ---
 
 **Built with ❤️ in San Antonio, TX**
-
-_This portfolio represents my journey from a Denver native to a San Antonio-based Data & AI leader, showcasing both technical skills and personal projects like restoring a 1910 craftsman home and building a custom workshop from shipping containers._
