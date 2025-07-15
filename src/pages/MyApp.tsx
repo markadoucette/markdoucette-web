@@ -1,3 +1,4 @@
+import React, { useState, useRef } from 'react';
 import { Wrench, Code, Lightbulb } from 'lucide-react';
 
 interface AppIdea {
@@ -11,7 +12,7 @@ interface SocialLink {
   className: string;
 }
 
-const MyApp = (): JSX.Element => {
+const MyApp = (): React.JSX.Element => {
   const appIdeas: AppIdea[] = [
     {
       title: "Task Manager Pro",
@@ -65,7 +66,7 @@ const MyApp = (): JSX.Element => {
 
       {/* Coming Soon Card */}
       <section className="py-16">
-        <div className="bg-white rounded-lg shadow-xl p-8 border-l-4 border-blue-600">
+        <div className="bg-gradient-light rounded-lg shadow-xl p-8 border-l-4 border-blue-600">
           <div className="flex items-center mb-6">
             <Wrench className="text-blue-600 mr-3" size={32} />
             <h2 className="text-2xl font-bold text-gray-900">Under Construction</h2>

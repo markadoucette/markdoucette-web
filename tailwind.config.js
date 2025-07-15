@@ -33,6 +33,57 @@ export default {
       }
     },
   },
-  plugins: [],
+  plugins: [
+        function({ addUtilities }) {
+      const newUtilities = {
+        '.bg-gradient-light': {
+          background: 'linear-gradient(to right, white, #f9fafb)',
+        },
+        '.bg-gradient-medium': {
+          background: 'linear-gradient(to bottom right, #ffffff, #e2e8f0)',
+        },
+        '.bg-gradient-blue': {
+          background: 'linear-gradient(to bottom right, #eff6ff, #dbeafe)',
+        },
+        '.bg-gradient-slate': {
+          background: 'linear-gradient(to bottom right, #e2e8f0, #cbd5e1)',
+        },
+        '.bg-gradient-dark': {
+          background: 'linear-gradient(to bottom right, #1e293b, #334155)',
+        },
+        '.bg-gradient-sunset': {
+          background: 'linear-gradient(to bottom right, #fef3c7, #fed7aa)', // Light yellow to light orange
+        },
+        '.bg-gradient-ocean': {
+          background: 'linear-gradient(to bottom right, #dbeafe, #bfdbfe)', // Light blue to medium blue
+        },
+        '.bg-gradient-mint': {
+          background: 'linear-gradient(to bottom right, #d1fae5, #a7f3d0)', // Light mint to medium mint
+        },
+        '.bg-gradient-lavender': {
+          background: 'linear-gradient(to bottom right, #e0e7ff, #c7d2fe)', // Light purple to medium purple
+        },
+        '.bg-gradient-peach': {
+          background: 'linear-gradient(to bottom right, #fef2f2, #fecaca)', // Light pink to light peach
+        },
+        '.bg-gradient-sky': {
+          background: 'linear-gradient(to bottom right, #f0f9ff, #7dd3fc)', // Very light blue to bright sky blue
+        },
+        '.bg-gradient-emerald': {
+          background: 'linear-gradient(to bottom right, #ecfdf5, #6ee7b7)', // Light emerald to bright emerald
+        },
+        '.bg-gradient-amber': {
+          background: 'linear-gradient(to bottom right, #fffbeb, #fbbf24)', // Light amber to bright amber
+        },
+        '.bg-gradient-charcoal': {
+          background: 'linear-gradient(to bottom right, #ffffff, #374151)', // White to medium gray
+        },
+        '.bg-gradient-steel': {
+          background: 'linear-gradient(to bottom right, #f9fafb, #6b7280)', // Near white to medium gray
+        },
+      }
+      addUtilities(newUtilities)
+    }
+  ],
 }
 
