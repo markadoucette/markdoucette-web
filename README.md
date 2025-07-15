@@ -2,7 +2,7 @@
 
 A modern, responsive portfolio website showcasing my journey as a Data & AI leader. Built with React, TypeScript, and Tailwind CSS, deployed on AWS Amplify.
 
-🌐 **Live Site**: [https://your-amplify-url.amplifyapp.com](https://your-amplify-url.amplifyapp.com)
+🌐 **Live Site**: [https://main.dzysy2z9cmttf.amplifyapp.com/](https://main.dzysy2z9cmttf.amplifyapp.com/)
 
 ## About This Project
 
