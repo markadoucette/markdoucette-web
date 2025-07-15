@@ -69,39 +69,6 @@ const AboutMe = () => {
     }
   ];
 
-  const getSkillsByCategory = (category: Skill['category']): Skill[] => {
-    return skills.filter(skill => skill.category === category);
-  };
-
-  const getSkillColorClass = (category: Skill['category']): string => {
-    switch (category) {
-      case 'aiml':
-        return 'px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm';
-      case 'frontend':
-        return 'px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm';
-      case 'backend':
-        return 'px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm';
-      case 'tools':
-        return 'px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm';
-      default:
-        return 'px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm';
-    }
-  };
-
-  const getCategoryTitle = (category: Skill['category']): string => {
-    switch (category) {
-      case 'aiml':
-        return 'AI & Machine Learning';
-      case 'frontend':
-        return 'Frontend';
-      case 'backend':
-        return 'Backend & Data';
-      case 'tools':
-        return 'Tools & Platforms';
-      default:
-        return 'Other';
-    }
-  };
 
   return (
     <div className="max-w-6xl mx-auto bg-transparent">

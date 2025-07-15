@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Download, Calendar, ExternalLink, ChevronLeft, ChevronRight, Linkedin } from 'lucide-react';
+import { Download, Calendar, ChevronLeft, ChevronRight, Linkedin } from 'lucide-react';
 
 interface CompanyAccomplishment {
   category: 'Business Impact' | 'AI/ML Solutions' | 'Data Strategy' | 'Client Success';
