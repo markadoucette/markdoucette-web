@@ -1,9 +1,6 @@
 import { Github, Linkedin, Mail, FileText } from 'lucide-react';
 
-interface Skill {
-  name: string;
-  category: 'frontend' | 'backend' | 'tools' | 'aiml';
-}
+
 
 interface SocialLink {
   href: string;
@@ -13,34 +10,7 @@ interface SocialLink {
 }
 
 const AboutMe = () => {
-  const skills: Skill[] = [
-    // AI/ML
-    { name: 'Machine Learning', category: 'aiml' },
-    { name: 'Neural Networks', category: 'aiml' },
-    { name: 'LLMs', category: 'aiml' },
-    { name: 'AWS SageMaker', category: 'aiml' },
-    { name: 'MLFlow', category: 'aiml' },
-    { name: 'Databricks', category: 'aiml' },
-    // Frontend
-    { name: 'React', category: 'frontend' },
-    { name: 'JavaScript', category: 'frontend' },
-    { name: 'TypeScript', category: 'frontend' },
-    { name: 'HTML', category: 'frontend' },
-    { name: 'CSS', category: 'frontend' },
-    { name: 'Tailwind', category: 'frontend' },
-    // Backend
-    { name: 'Python', category: 'backend' },
-    { name: 'SQL', category: 'backend' },
-    { name: 'Node.js', category: 'backend' },
-    { name: 'Snowflake', category: 'backend' },
-    // Tools
-    { name: 'AWS', category: 'tools' },
-    { name: 'GCP', category: 'tools' },
-    { name: 'Git', category: 'tools' },
-    { name: 'Looker', category: 'tools' },
-    { name: 'Tableau', category: 'tools' },
-    { name: 'Docker', category: 'tools' }
-  ];
+  
 
   const socialLinks: SocialLink[] = [
     {
