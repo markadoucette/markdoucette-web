@@ -1,5 +1,5 @@
 // utils/analytics.ts
-export const GA_TRACKING_ID = 'G-FYRJR1TNPV';
+export const GA_TRACKING_ID = 'G-0FKHKFQHQ2';
 
 // Initialize Google Analytics
 export const initGA = () => {
