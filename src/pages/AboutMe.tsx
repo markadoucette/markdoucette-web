@@ -14,7 +14,7 @@ const AboutMe = () => {
 
   const socialLinks: SocialLink[] = [
     {
-      href: 'https://github.com/markdoucette',
+      href: 'https://github.com/markadoucette',
       icon: <Github size={20} className="mr-2" />,
       label: 'GitHub',
       className: 'flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors'
@@ -26,7 +26,7 @@ const AboutMe = () => {
       className: 'flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
     },
     {
-      href: 'mailto:mark@markdoucette.com',
+      href: 'mailto:mark.a.doucette@gmail.com.com',
       icon: <Mail size={20} className="mr-2" />,
       label: 'Email',
       className: 'flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors'
