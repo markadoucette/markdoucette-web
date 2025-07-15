@@ -14,7 +14,7 @@ const Navbar = (): React.JSX.Element => {
   const navItems: NavItem[] = [
     { path: '/about', label: 'About Me' },
     { path: '/experience', label: 'Experience' },
-    { path: '/app', label: 'My App' },
+      { path: '/smart-ticket', label: 'Smart Ticket' },
     { path: '/contact', label: 'Contact' }
   ];
 

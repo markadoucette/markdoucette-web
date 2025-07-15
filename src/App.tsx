@@ -6,7 +6,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Navbar from './components/Navbar';
 import AboutMe from './pages/AboutMe';
 import Experience from './pages/Experience';
-import MyApp from './pages/MyApp';
+import SmartTicketAnalyzer from './pages/SmartTicketAnalyzer';
 import Contact from './pages/Contact';
 import './App.css';
 import { useEffect, useState } from 'react';
@@ -53,7 +53,7 @@ function App() {
           <Route path="/" element={<AboutMe />} />
           <Route path="/about" element={<AboutMe />} />
           <Route path="/experience" element={<Experience />} />
-          <Route path="/app" element={<MyApp />} />
+          <Route path="/smart-ticket" element={<SmartTicketAnalyzer />} /> {/* Add this */}
           <Route path="/contact" element={<Contact />} />
         </Routes>
       </main>
