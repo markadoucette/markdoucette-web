@@ -2,6 +2,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { useOrientation } from './hooks/useOrientation';
 import RotationPrompt from './components/RotationPrompt';
+import ScrollToTop from './components/ScrollToTop'; 
 import Navbar from './components/Navbar';
 import AboutMe from './pages/AboutMe';
 import Experience from './pages/Experience';
@@ -38,6 +39,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-medium">
+       <ScrollToTop />
       {/* Rotation Prompt Overlay */}
       <RotationPrompt 
         show={showRotationPrompt} 
