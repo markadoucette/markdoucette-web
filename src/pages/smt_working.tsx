@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Play, Copy, Check, AlertCircle } from 'lucide-react';
 
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
-// These interfaces define the data structures used throughout the application
-
-// Defines the structure of each tutorial step
+// Types
 interface LearningStep {
   id: number;
   title: string;
   description: string;
-  content: React.ReactNode; // The actual JSX content to display
-  codeType: 'setup' | 'api' | 'prompt' | 'response' | 'complete'; // Determines which code to show
+  content: React.ReactNode;
+  codeType: 'setup' | 'api' | 'prompt' | 'response' | 'complete';
 }
 
-// Structure for Stack Overflow API response items
 interface StackOverflowItem {
   title: string;
   link: string;
@@ -25,18 +19,14 @@ interface StackOverflowItem {
   is_answered: boolean;
 }
 
-// Complete Stack Overflow API response structure
 interface StackOverflowResponse {
   items: StackOverflowItem[];
   total: number;
   quota_remaining: number;
 }
 
-// Main application state - contains all user inputs, configurations, and results
 interface AppState {
-  currentStep: number; // Which tutorial step we're currently on (1-6)
-  
-  // User's support ticket information
+  currentStep: number;
   userInputs: {
     ticketDescription: string;
     priority: 'P1' | 'P2' | 'P3' | 'P4';
@@ -44,51 +34,35 @@ interface AppState {
     techStack: string[];
     additionalContext: string;
   };
-  
-  // Stack Overflow API search configuration
   soConfig: {
-    sortBy: string; // 'relevance', 'votes', 'creation'
-    resultLimit: number; // How many results to fetch
-    answeredOnly: boolean; // Whether to only include answered questions
+    sortBy: string;
+    resultLimit: number;
+    answeredOnly: boolean;
   };
-  
-  // GitHub API search configuration
   githubConfig?: {
-    language?: string; // Programming language filter
-    minStars?: number; // Minimum repository star count
-    fileExtensions?: string[]; // File types to search for
+    language?: string;
+    minStars?: number;
+    fileExtensions?: string[];
   };
-  
-  // AI analysis configuration
   aiConfig?: {
-    model?: string; // Which AI model to use
-    temperature?: number; // AI response creativity (0-1)
-    maxTokens?: number; // Maximum response length
+    model?: string;
+    temperature?: number;
+    maxTokens?: number;
     includeCodeExamples?: boolean;
     includeStepByStep?: boolean;
   };
-  
-  // Generated code that changes based on user inputs
   generatedCode: {
     apiCall: string;
   };
-  
-  // UI state
-  isExecuting: boolean; // Whether an API call is currently running
-  
-  // Results from API calls
+  isExecuting: boolean;
   results: {
     stackOverflow?: StackOverflowResponse;
-    github?: any; // GitHub API response structure
-    aiAnalysis?: any; // AI analysis response structure
+    github?: any;
+    aiAnalysis?: any;
   } | null;
 }
 
-// ============================================================================
-// UTILITY COMPONENTS
-// ============================================================================
-
-// Progress bar component - shows tutorial completion percentage
+// Components
 const ProgressBar = ({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) => (
   <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
     <div 
@@ -98,7 +72,6 @@ const ProgressBar = ({ currentStep, totalSteps }: { currentStep: number; totalSt
   </div>
 );
 
-// Step header component - displays current step info and progress
 const StepHeader = ({ step, total }: { step: number; total: number }) => (
   <div className="mb-6">
     <div className="flex items-center justify-between mb-2">
@@ -108,11 +81,6 @@ const StepHeader = ({ step, total }: { step: number; total: number }) => (
     <ProgressBar currentStep={step} totalSteps={total} />
   </div>
 );
-
-// ============================================================================
-// CODE DISPLAY COMPONENT
-// ============================================================================
-// This component handles syntax highlighting and code display with copy functionality
 
 const CodeBlock = ({ 
   title, 
@@ -131,88 +99,32 @@ const CodeBlock = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  // Handles copying code to clipboard
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Syntax highlighting engine - parses code and applies colors
-  const renderHighlightedCode = (text: string) => {
+  const highlightCode = (text: string) => {
     if (language === 'javascript') {
-      const lines = text.split('\n');
-      return lines.map((line, lineIndex) => {
-        const tokens = [];
-        let remaining = line;
-        let index = 0;
-
-        // Process each character in the line, applying syntax highlighting
-        while (remaining.length > 0) {
-          // Check for JavaScript keywords (const, let, function, etc.)
-          const keywordMatch = remaining.match(/^(const|let|var|function|async|await|return|if|else|for|while|try|catch|throw|new)\b/);
-          if (keywordMatch) {
-            tokens.push(<span key={index++} style={{color: '#569cd6', fontWeight: 'bold'}}>{keywordMatch[0]}</span>);
-            remaining = remaining.slice(keywordMatch[0].length);
-            continue;
-          }
-
-          // Check for strings (quotes and template literals)
-          const stringMatch = remaining.match(/^"[^"]*"|^'[^']*'|^`[^`]*`/);
-          if (stringMatch) {
-            tokens.push(<span key={index++} style={{color: '#ce9178'}}>{stringMatch[0]}</span>);
-            remaining = remaining.slice(stringMatch[0].length);
-            continue;
-          }
-
-          // Check for numbers
-          const numberMatch = remaining.match(/^\d+\.?\d*/);
-          if (numberMatch) {
-            tokens.push(<span key={index++} style={{color: '#b5cea8'}}>{numberMatch[0]}</span>);
-            remaining = remaining.slice(numberMatch[0].length);
-            continue;
-          }
-
-          // Check for comments
-          const commentMatch = remaining.match(/^\/\/.*/);
-          if (commentMatch) {
-            tokens.push(<span key={index++} style={{color: '#6a9955', fontStyle: 'italic'}}>{commentMatch[0]}</span>);
-            remaining = remaining.slice(commentMatch[0].length);
-            continue;
-          }
-
-          // Check for function calls (name followed by parentheses)
-          const functionMatch = remaining.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/);
-          if (functionMatch) {
-            tokens.push(<span key={index++} style={{color: '#dcdcaa'}}>{functionMatch[0]}</span>);
-            remaining = remaining.slice(functionMatch[0].length);
-            continue;
-          }
-
-          // Default: render character with default color
-          tokens.push(<span key={index++} style={{color: '#d4d4d4'}}>{remaining[0]}</span>);
-          remaining = remaining.slice(1);
-        }
-
-        return (
-          <div key={lineIndex}>
-            {tokens}
-          </div>
-        );
+      const keywords = ['const', 'let', 'var', 'function', 'async', 'await', 'return', 'if', 'else', 'for', 'while', 'try', 'catch', 'throw', 'new'];
+      
+      let highlighted = text;
+      keywords.forEach(keyword => {
+        const regex = new RegExp('\\b' + keyword + '\\b', 'g');
+        highlighted = highlighted.replace(regex, `<span style="color: #569cd6; font-weight: bold;">${keyword}</span>`);
       });
+      
+      return highlighted;
     }
-    
-    // Fallback for non-JavaScript code
-    return <span style={{color: '#d4d4d4'}}>{text}</span>;
+    return text;
   };
 
   return (
     <div className="bg-gray-900 rounded-lg overflow-hidden mb-4">
-      {/* Code block header with title and action buttons */}
       <div className="bg-gray-800 px-4 py-2 flex justify-between items-center">
         <span className="text-white font-medium">{title}</span>
         <div className="flex space-x-2">
-          {/* Optional execute button for interactive code */}
           {canExecute && (
             <button
               onClick={onExecute}
@@ -223,7 +135,6 @@ const CodeBlock = ({
               {isExecuting ? 'Running...' : 'Execute'}
             </button>
           )}
-          {/* Copy to clipboard button */}
           <button
             onClick={copyToClipboard}
             className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
@@ -234,7 +145,6 @@ const CodeBlock = ({
         </div>
       </div>
       
-      {/* Code content area with syntax highlighting */}
       <div style={{
         padding: '16px',
         backgroundColor: '#1a1a1a',
@@ -244,23 +154,18 @@ const CodeBlock = ({
         lineHeight: '1.5',
         textAlign: 'left'
       }}>
-        <pre style={{
-          color: '#d4d4d4',
-          whiteSpace: 'pre-wrap',
-          textAlign: 'left',
-          margin: 0
-        }}>
-          {renderHighlightedCode(code)}
-        </pre>
+        <div
+          style={{
+            color: '#d4d4d4',
+            whiteSpace: 'pre-wrap',
+            textAlign: 'left'
+          }}
+          dangerouslySetInnerHTML={{ __html: highlightCode(code) }}
+        />
       </div>
     </div>
   );
 };
-
-// ============================================================================
-// TICKET INPUT FORM COMPONENT
-// ============================================================================
-// Form for capturing support ticket details - the foundation of the AI analysis
 
 const TicketInputForm = ({ 
   inputs, 
@@ -269,20 +174,17 @@ const TicketInputForm = ({
   inputs: AppState['userInputs']; 
   onChange: (inputs: AppState['userInputs']) => void;
 }) => {
-  // Available technology stack options for filtering solutions
   const techStackOptions = ['React', 'Node.js', 'Python', 'Java', 'API Gateway', 'Database', 'Authentication'];
 
-  // Handles adding/removing items from the tech stack selection
   const handleTechStackChange = (tech: string) => {
     const newTechStack = inputs.techStack.includes(tech)
-      ? inputs.techStack.filter(t => t !== tech) // Remove if already selected
-      : [...inputs.techStack, tech]; // Add if not selected
+      ? inputs.techStack.filter(t => t !== tech)
+      : [...inputs.techStack, tech];
     onChange({ ...inputs, techStack: newTechStack });
   };
 
   return (
     <div className="space-y-4">
-      {/* Issue description - primary input for API searches */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Issue Description
@@ -296,7 +198,6 @@ const TicketInputForm = ({
         />
       </div>
 
-      {/* Priority level - affects response urgency and resource allocation */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Priority Level
@@ -313,7 +214,6 @@ const TicketInputForm = ({
         </select>
       </div>
 
-      {/* Customer tier - determines support level and solution complexity */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Customer Tier
@@ -329,7 +229,6 @@ const TicketInputForm = ({
         </select>
       </div>
 
-      {/* Technology stack - helps filter relevant solutions and code examples */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Tech Stack (Select all that apply)
@@ -352,20 +251,9 @@ const TicketInputForm = ({
   );
 };
 
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-// The primary Smart Ticket Analyzer component that orchestrates the entire tutorial
-
 const SmartTicketAnalyzer = () => {
-  // ========================================
-  // STATE MANAGEMENT
-  // ========================================
-  // Main application state - contains all user inputs, API configurations, and results
   const [appState, setAppState] = useState<AppState>({
-    currentStep: 1, // Start at step 1
-    
-    // Default ticket inputs
+    currentStep: 1,
     userInputs: {
       ticketDescription: '',
       priority: 'P2',
@@ -373,49 +261,34 @@ const SmartTicketAnalyzer = () => {
       techStack: [],
       additionalContext: ''
     },
-    
-    // Stack Overflow API default settings
     soConfig: {
       sortBy: 'relevance',
       resultLimit: 10,
       answeredOnly: true
     },
-    
-    // GitHub API default settings
     githubConfig: {
       language: 'javascript',
       minStars: 10,
       fileExtensions: ['js', 'ts']
     },
-    
-    // AI analysis default settings
     aiConfig: {
-    model: 'claude-3-5-sonnet-20241022',  // ← Updated default
-    temperature: 0.3,
-    maxTokens: 1500,
-    includeCodeExamples: true,
-    includeStepByStep: true
+      model: 'gpt-4',
+      temperature: 0.3,
+      maxTokens: 1500,
+      includeCodeExamples: true,
+      includeStepByStep: true
     },
-    
-    // Generated code starts empty
     generatedCode: {
       apiCall: ''
     },
-    
-    // UI state
     isExecuting: false,
     results: null
   });
 
-  // ========================================
-  // DYNAMIC CODE GENERATION
-  // ========================================
-  // This effect generates different code samples based on current step and user inputs
   useEffect(() => {
     const currentStep = appState.currentStep;
     let apiCall = '// Default code for step ' + currentStep;
     
-    // Step 2+: Generate Stack Overflow API search code
     if (currentStep >= 2) {
       const answeredFilter = appState.soConfig?.answeredOnly ? '&answered=true' : '';
       const sortBy = appState.soConfig?.sortBy || 'relevance';
@@ -444,7 +317,6 @@ const searchStackOverflow = async () => {
 };`;
     }
     
-    // Step 4+: Add GitHub API search code
     if (currentStep >= 4) {
       const language = appState.githubConfig?.language || 'javascript';
       const minStars = appState.githubConfig?.minStars || 0;
@@ -469,31 +341,11 @@ const searchGitHub = async () => {
     const extQuery = fileExts.map(ext => 'extension:' + ext).join(' OR ');
     searchQuery += ' (' + extQuery + ')';
   }
-// Build GitHub API URL with search parameters
-    const apiUrl = 'https://api.github.com/search/code?q=' + encodeURIComponent(searchQuery) + '&per_page=15&sort=indexed';
-
-    // Make authenticated request to GitHub API
-    const response = await fetch(apiUrl, {
-    headers: {
-        'Authorization': 'token ' + import.meta.env.VITE_GITHUB_TOKEN,
-        'Accept': 'application/vnd.github.v3+json'
-    }
-    });
-
-    // Check for API errors
-    if (!response.ok) {
-    throw new Error('GitHub API Error: ' + response.status + ' ' + response.statusText);
-    }
-
-    // Parse and return the response data
-    const data = await response.json();
-    return data;
-
-
+  
+  return { items: [], total_count: 0 };
 };`;
     }
     
-    // Update the generated code in state
     setAppState(prev => ({
       ...prev,
       generatedCode: {
@@ -501,7 +353,6 @@ const searchGitHub = async () => {
       }
     }));
   }, [
-    // Re-run when any of these dependencies change
     appState.currentStep, 
     appState.userInputs.ticketDescription,
     appState.soConfig?.sortBy,
@@ -517,19 +368,13 @@ const searchGitHub = async () => {
     appState.aiConfig?.includeStepByStep
   ]);
 
-  // ========================================
-  // TUTORIAL STEP DEFINITIONS
-  // ========================================
-  // Each step contains content, configuration, and learning objectives
   const steps: LearningStep[] = [
-    // STEP 1: Problem Introduction
     {
       id: 1,
       title: "Understanding the Problem",
       description: "Learn why manual ticket resolution is inefficient and how AI can help",
       content: (
         <div className="space-y-4">
-          {/* Problem statement - current manual process inefficiencies */}
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-left">
             <div className="flex items-center mb-2">
               <AlertCircle className="text-red-500 mr-2" size={20} />
@@ -545,7 +390,6 @@ const searchGitHub = async () => {
             </ul>
           </div>
           
-          {/* Solution overview - AI automation benefits */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-left">
             <h3 className="font-semibold text-green-800 mb-2">AI-Automated Solution</h3>
             <ul className="text-green-700 space-y-1 text-sm text-left">
@@ -556,7 +400,6 @@ const searchGitHub = async () => {
             </ul>
           </div>
 
-          {/* Tutorial overview */}
           <p className="text-gray-600">
             In this tutorial, you'll learn to build an intelligent support system that automates 
             the research and analysis process, allowing CSEs to focus on customer relationships 
@@ -566,8 +409,6 @@ const searchGitHub = async () => {
       ),
       codeType: 'setup'
     },
-    
-    // STEP 2: Data Collection
     {
       id: 2,
       title: "Capturing Support Ticket Data",
@@ -579,13 +420,11 @@ const searchGitHub = async () => {
             This forms the foundation for our AI analysis.
           </p>
           
-          {/* Interactive form for ticket data entry */}
           <TicketInputForm 
             inputs={appState.userInputs}
             onChange={(inputs) => setAppState(prev => ({ ...prev, userInputs: inputs }))}
           />
 
-          {/* Explanation of why each data point matters */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
             <h4 className="font-semibold text-blue-800 mb-2">Why This Data Matters:</h4>
             <ul className="text-blue-700 space-y-1 text-sm text-left">
@@ -599,8 +438,6 @@ const searchGitHub = async () => {
       ),
       codeType: 'api'
     },
-    
-    // STEP 3: Stack Overflow Integration
     {
       id: 3,
       title: "Stack Overflow API Integration",
@@ -612,7 +449,6 @@ const searchGitHub = async () => {
             to find relevant solutions based on the ticket description.
           </p>
 
-          {/* API strategy explanation */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left">
             <h4 className="font-semibold text-yellow-800 mb-2">API Strategy:</h4>
             <ul className="text-yellow-700 space-y-1 text-sm text-left">
@@ -623,9 +459,7 @@ const searchGitHub = async () => {
             </ul>
           </div>
 
-          {/* Interactive API configuration controls */}
           <div className="space-y-3">
-            {/* Search strategy selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Search Strategy
@@ -644,7 +478,6 @@ const searchGitHub = async () => {
               </select>
             </div>
 
-            {/* Result limit slider */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Result Limit
@@ -663,7 +496,6 @@ const searchGitHub = async () => {
               <span className="text-sm text-gray-500">{appState.soConfig?.resultLimit || 10} results</span>
             </div>
 
-            {/* Answered questions filter */}
             <div>
               <label className="flex items-center space-x-2">
                 <input
@@ -680,7 +512,6 @@ const searchGitHub = async () => {
             </div>
           </div>
 
-          {/* Live API preview - shows what the actual API call will look like */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
             <h4 className="font-semibold text-blue-800 mb-2">Live API Preview:</h4>
             <div className="text-blue-700 text-sm space-y-1 text-left">
@@ -691,7 +522,6 @@ const searchGitHub = async () => {
             </div>
           </div>
 
-          {/* Expected results explanation */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-left">
             <h4 className="font-semibold text-green-800 mb-2">Expected Results:</h4>
             <p className="text-green-700 text-sm text-left">
@@ -700,20 +530,17 @@ const searchGitHub = async () => {
             </p>
           </div>
 
-          {/* Live API call button - actually calls Stack Overflow API */}
           <button
             onClick={async () => {
               setAppState(prev => ({ ...prev, isExecuting: true }));
               
               try {
-                // Build API URL with current configuration
                 const query = encodeURIComponent(appState.userInputs.ticketDescription);
                 const answeredFilter = appState.soConfig.answeredOnly ? '&answered=true' : '';
                 const apiUrl = `https://api.stackexchange.com/2.3/search?` +
                   `order=desc&sort=${appState.soConfig.sortBy}&site=stackoverflow` +
                   `&intitle=${query}&pagesize=${appState.soConfig.resultLimit}${answeredFilter}`;
                 
-                // Make the actual API call
                 const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
@@ -722,14 +549,12 @@ const searchGitHub = async () => {
                 
                 const data = await response.json();
                 
-                // Store results in state
                 setAppState(prev => ({ 
                   ...prev, 
                   isExecuting: false,
                   results: { ...prev.results, stackOverflow: data }
                 }));
                 
-                // Show success message
                 alert(
                   `✅ Stack Overflow API Success!\n\n` +
                   `Found: ${data.items?.length || 0} questions\n` +
@@ -759,7 +584,6 @@ const searchGitHub = async () => {
             )}
           </button>
 
-          {/* Results display - shows actual API response data */}
           {appState.results?.stackOverflow && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
               <div className="flex justify-between items-center mb-3">
@@ -775,18 +599,15 @@ const searchGitHub = async () => {
               
               <div className="relative">
                 <div className="space-y-2 max-h-60 overflow-y-auto border rounded bg-white p-2">
-                  {/* Render each Stack Overflow question result */}
                   {appState.results.stackOverflow.items?.map((item: StackOverflowItem, index: number) => (
                     <div key={index} className="bg-gray-50 p-3 rounded border hover:bg-gray-100 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          {/* Question title with link */}
                           <div className="font-medium text-blue-600 hover:text-blue-800 text-sm">
                             <a href={item.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
                               {item.title}
                             </a>
                           </div>
-                          {/* Question metadata */}
                           <div className="flex items-center gap-4 text-gray-500 text-xs mt-2">
                             <span className="flex items-center">
                               👍 <span className="ml-1 font-medium">{item.score}</span>
@@ -813,7 +634,6 @@ const searchGitHub = async () => {
                 </div>
               </div>
               
-              {/* API usage statistics */}
               <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
                 <span>
                   Showing {Math.min(appState.results.stackOverflow.items?.length || 0, 10)} of {appState.results.stackOverflow.total || 'Unknown'} total results
@@ -828,8 +648,6 @@ const searchGitHub = async () => {
       ),
       codeType: 'api'
     },
-    
-    // STEP 4: GitHub Integration
     {
       id: 4,
       title: "GitHub Code Search",
@@ -841,7 +659,6 @@ const searchGitHub = async () => {
             We'll search for code that relates to the customer's tech stack and issue.
           </p>
 
-          {/* GitHub search strategy explanation */}
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-left">
             <h4 className="font-semibold text-purple-800 mb-2">Search Parameters:</h4>
             <ul className="text-purple-700 space-y-1 text-sm text-left">
@@ -852,9 +669,7 @@ const searchGitHub = async () => {
             </ul>
           </div>
 
-          {/* GitHub API configuration controls */}
           <div className="space-y-3">
-            {/* Programming language selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Primary Language
@@ -880,7 +695,6 @@ const searchGitHub = async () => {
               </select>
             </div>
 
-            {/* Repository quality filter (star count) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Minimum Repository Stars
@@ -907,19 +721,16 @@ const searchGitHub = async () => {
               </span>
             </div>
 
-            {/* File extension selection based on language */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 File Extensions
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(() => {
-                  // Dynamic file extension options based on selected language
                   const language = appState.githubConfig?.language || 'javascript';
                   let extensions = [];
                   let defaultSelected = [];
                   
-                  // Define extensions for each language
                   switch(language) {
                     case 'javascript':
                       extensions = ['js', 'jsx', 'mjs', 'json', 'ts', 'tsx'];
@@ -956,7 +767,6 @@ const searchGitHub = async () => {
                   
                   const currentExts = appState.githubConfig?.fileExtensions || [];
                   
-                  // Auto-select relevant extensions when language changes
                   React.useEffect(() => {
                     const hasRelevantExts = currentExts.some(ext => extensions.includes(ext));
                     if (!hasRelevantExts || currentExts.length === 0) {
@@ -970,7 +780,6 @@ const searchGitHub = async () => {
                     }
                   }, [language]);
                   
-                  // Render extension checkboxes
                   return extensions.map(ext => {
                     const isSelected = currentExts.includes(ext);
                     return (
@@ -1003,7 +812,6 @@ const searchGitHub = async () => {
             </div>
           </div>
 
-          {/* Live GitHub search preview */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
             <h4 className="font-semibold text-blue-800 mb-2">Live Search Preview:</h4>
             <div className="text-blue-700 text-sm space-y-1 text-left">
@@ -1014,19 +822,16 @@ const searchGitHub = async () => {
             </div>
           </div>
 
-          {/* GitHub API call button - requires API token */}
           <button
             onClick={async () => {
               setAppState(prev => ({ ...prev, isExecuting: true }));
               
               try {
-                // Check for GitHub API token (would be set in environment variables)
                 const token = import.meta.env.VITE_GITHUB_TOKEN;
                 if (!token) {
                   throw new Error('GitHub token not found');
                 }
 
-                // Build GitHub search query
                 const query = appState.userInputs.ticketDescription.trim();
                 const language = appState.githubConfig?.language || 'javascript';
                 const minStars = appState.githubConfig?.minStars || 0;
@@ -1040,7 +845,6 @@ const searchGitHub = async () => {
 
                 const apiUrl = `https://api.github.com/search/code?q=${encodeURIComponent(searchQuery)}&per_page=15&sort=indexed`;
                 
-                // Make authenticated GitHub API call
                 const response = await fetch(apiUrl, {
                   headers: {
                     'Authorization': `token ${token}`,
@@ -1055,14 +859,12 @@ const searchGitHub = async () => {
                 
                 const data = await response.json();
                 
-                // Store GitHub results
                 setAppState(prev => ({ 
                   ...prev, 
                   isExecuting: false,
                   results: { ...prev.results, github: data }
                 }));
                 
-                // Show appropriate success/warning message
                 if (data.items && data.items.length > 0) {
                   alert(
                     `✅ GitHub API Success!\n\n` +
@@ -1103,7 +905,6 @@ const searchGitHub = async () => {
             )}
           </button>
 
-          {/* GitHub results display */}
           {appState.results?.github && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
               <div className="flex justify-between items-center mb-3">
@@ -1113,22 +914,18 @@ const searchGitHub = async () => {
               </div>
               
               <div className="space-y-2 max-h-60 overflow-y-auto border rounded bg-white p-2">
-                {/* Render each GitHub code search result */}
                 {appState.results.github.items?.map((item: any, index: number) => (
                   <div key={index} className="bg-gray-50 p-3 rounded border hover:bg-gray-100 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        {/* File name with link to GitHub */}
                         <div className="font-medium text-purple-600 hover:text-purple-800 text-sm">
                           <a href={item.html_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                             {item.name}
                           </a>
                         </div>
-                        {/* File path */}
                         <div className="text-xs text-gray-600 mt-1">
                           📁 {item.path}
                         </div>
-                        {/* Repository info */}
                         <div className="text-xs text-gray-500 mt-1">
                           🏛️ {item.repository.full_name} • ⭐ {item.repository.stargazers_count?.toLocaleString()} stars
                         </div>
@@ -1141,7 +938,6 @@ const searchGitHub = async () => {
                 ))}
               </div>
               
-              {/* GitHub API usage info */}
               <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
                 <span>
                   Showing {Math.min(appState.results.github.items?.length || 0, 15)} of {appState.results.github.total_count || 0} total files
@@ -1153,8 +949,6 @@ const searchGitHub = async () => {
       ),
       codeType: 'api'
     },
-    
-    // STEP 5: AI Prompt Engineering
     {
       id: 5,
       title: "AI Prompt Engineering", 
@@ -1166,7 +960,6 @@ const searchGitHub = async () => {
             ticket data with API results to create context-rich prompts.
           </p>
 
-          {/* Prompt engineering strategy explanation */}
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-left">
             <h4 className="font-semibold text-indigo-800 mb-2">Prompt Structure:</h4>
             <ul className="text-indigo-700 space-y-1 text-sm text-left">
@@ -1177,31 +970,29 @@ const searchGitHub = async () => {
             </ul>
           </div>
 
-          {/* AI configuration controls */}
           <div className="space-y-3">
-            {/* AI model selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 AI Model Selection
               </label>
-            <select 
-            className="w-full p-2 border border-gray-300 rounded"
-            value={appState.aiConfig?.model || 'claude-3-5-sonnet-20241022'}
-            onChange={(e) => setAppState(prev => ({
-                ...prev,
-                aiConfig: { 
-                ...prev.aiConfig,
-                model: e.target.value
-                }
-            }))}
-            >
-            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Latest)</option>
-            <option value="claude-3-haiku-20240307">Claude 3 Haiku (Fast)</option>
-            <option value="claude-3-opus-20240229">Claude 3 Opus (Most Capable)</option>`
-            </select>
+              <select 
+                className="w-full p-2 border border-gray-300 rounded"
+                value={appState.aiConfig?.model || 'gpt-4'}
+                onChange={(e) => setAppState(prev => ({
+                  ...prev,
+                  aiConfig: { 
+                    ...prev.aiConfig,
+                    model: e.target.value
+                  }
+                }))}
+              >
+                <option value="gpt-4">GPT-4 (Best Analysis)</option>
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster)</option>
+                <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                <option value="claude-3-haiku">Claude 3 Haiku (Fast)</option>
+              </select>
             </div>
 
-            {/* Temperature control (creativity vs consistency) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Response Temperature
@@ -1228,7 +1019,6 @@ const searchGitHub = async () => {
               </div>
             </div>
 
-            {/* Response length control */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Max Response Tokens
@@ -1251,7 +1041,6 @@ const searchGitHub = async () => {
               </select>
             </div>
 
-            {/* Response format options */}
             <div>
               <label className="flex items-center space-x-2">
                 <input
@@ -1289,11 +1078,10 @@ const searchGitHub = async () => {
             </div>
           </div>
 
-          {/* Live prompt preview - shows current AI configuration */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
             <h4 className="font-semibold text-blue-800 mb-2">Live Prompt Preview:</h4>
             <div className="text-blue-700 text-sm space-y-1 text-left">
-              <p><strong>Model:</strong> {appState.aiConfig?.model || 'claude-3-5-sonnet-20241022'}</p>
+              <p><strong>Model:</strong> {appState.aiConfig?.model || 'gpt-4'}</p>
               <p><strong>Temperature:</strong> {appState.aiConfig?.temperature ?? 0.3}</p>
               <p><strong>Max Tokens:</strong> {appState.aiConfig?.maxTokens || 1500}</p>
               <p><strong>Context Sources:</strong> 
@@ -1304,133 +1092,75 @@ const searchGitHub = async () => {
             </div>
           </div>
 
-          {/* AI analysis execution button */}
           <button
             onClick={async () => {
-              // Check if we have data from previous steps
               if (!appState.results?.stackOverflow && !appState.results?.github) {
                 alert('⚠️ No API data available!\n\nPlease run the Stack Overflow and/or GitHub searches first (Steps 3 & 4) to gather context for AI analysis.');
                 return;
               }
 
               setAppState(prev => ({ ...prev, isExecuting: true }));
-           try {
-            // Build the AI prompt using current configuration
-            const soResultsCount = appState.results?.stackOverflow?.items?.length || 0;
-            const githubResultsCount = appState.results?.github?.items?.length || 0;
-            const includeCode = appState.aiConfig?.includeCodeExamples ?? true;
-            const includeSteps = appState.aiConfig?.includeStepByStep ?? true;
+              
+              try {
+                await new Promise(resolve => setTimeout(resolve, 3000));
 
-            const contextSources = [];
-            if (soResultsCount > 0) contextSources.push(`${soResultsCount} Stack Overflow questions`);
-            if (githubResultsCount > 0) contextSources.push(`${githubResultsCount} GitHub code examples`);
-
-            // Create the prompt for Claude
-            const prompt = `You are a senior software support engineer analyzing a customer support ticket.
-
-            TICKET DETAILS:
-            - Issue: ${appState.userInputs.ticketDescription}
-            - Priority: ${appState.userInputs.priority}
-            - Customer Tier: ${appState.userInputs.customerTier}
-            - Tech Stack: ${appState.userInputs.techStack.join(', ')}
-
-            RESEARCH CONTEXT:
-            - Stack Overflow results analyzed: ${soResultsCount}
-            - GitHub code examples found: ${githubResultsCount}
-            - Context available: ${contextSources.length > 0 ? contextSources.join(' + ') : 'No API data available'}
-
-            TASK: Provide prioritized solutions for this support ticket.
-
-            REQUIREMENTS:
-            - Confidence scoring (0-100%) for each solution
-            - Estimated implementation time
-            - Risk assessment for each approach
-            - Priority ranking based on customer tier (${appState.userInputs.customerTier})
-            ${includeCode ? '- Include relevant code examples' : '- Focus on conceptual solutions'}
-            ${includeSteps ? '- Provide detailed step-by-step guides' : '- Provide high-level summaries'}
-
-            Respond ONLY with valid JSON in this exact format:
-            {
-            "solutions": [
-                {
-                "title": "Solution name",
-                "confidence": 85,
-                "description": "Brief explanation",
-                "estimatedTime": "15-30 minutes",
-                "priority": "high",
-                "risks": ["risk1", "risk2"],
-                ${includeSteps ? '"steps": ["step1", "step2", "step3"],' : ''}
-                ${includeCode ? '"codeExample": "example code snippet",' : ''}
-                "applicability": "Specific to ${appState.userInputs.customerTier} tier customers"
-                }
-            ],
-            "overallConfidence": 89,
-            "recommendedApproach": "Primary solution to try first",
-            "escalationNeeded": false,
-            "estimatedTotalTime": "30-45 minutes"
-            }`;
-
-            // Call Claude API through AWS Lambda
-            const response = await fetch(import.meta.env.VITE_CLAUDE_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    model: 'claude-3-5-sonnet-20241022',
-                    temperature: appState.aiConfig?.temperature || 0.3,
-                    maxTokens: appState.aiConfig?.maxTokens || 1500
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error('Claude API Error: ' + response.status + ' - ' + (errorData.error?.message || response.statusText));
-            }
-
-            const claudeData = await response.json();
-            const claudeResponse = claudeData.content[0].text;
-
-            // Parse Claude's response
-            let aiAnalysisResult;
-            try {
-                aiAnalysisResult = JSON.parse(claudeResponse);
-                
-                // Add metadata
-                aiAnalysisResult.processingTime = "Real-time";
-                aiAnalysisResult.sourcesAnalyzed = {
-                stackOverflow: soResultsCount,
-                github: githubResultsCount
+                const mockAIResponse = {
+                  solutions: [
+                    {
+                      title: "State Update Timing Issue",
+                      confidence: 92,
+                      description: "The component is not re-rendering because state updates are asynchronous",
+                      steps: [
+                        "Use useEffect to monitor state changes",
+                        "Ensure state updates are not batched incorrectly",
+                        "Add dependency array to useEffect"
+                      ],
+                      estimatedTime: "15-30 minutes",
+                      risks: ["May need to refactor component logic"],
+                      codeExample: "useEffect(() => { console.log(state); }, [state]);"
+                    },
+                    {
+                      title: "Incorrect State Mutation",
+                      confidence: 87,
+                      description: "Direct state mutation prevents React from detecting changes",
+                      steps: [
+                        "Use spread operator for object updates",
+                        "Use functional updates for arrays",
+                        "Avoid direct property assignment"
+                      ],
+                      estimatedTime: "10-20 minutes",
+                      risks: ["Requires testing existing functionality"],
+                      codeExample: "setState(prev => ({...prev, newProperty: value}));"
+                    }
+                  ],
+                  overallConfidence: 89,
+                  processingTime: "3.2 seconds",
+                  sourcesAnalyzed: {
+                    stackOverflow: appState.results?.stackOverflow?.items?.length || 0,
+                    github: appState.results?.github?.items?.length || 0
+                  }
                 };
-            } catch (parseError) {
-                console.error('Failed to parse Claude response:', parseError);
-                console.log('Raw Claude response:', claudeResponse);
-                throw new Error('Claude returned invalid JSON response');
-            }
 
-            // Update state with real Claude results
-            setAppState(prev => ({ 
-                ...prev, 
-                isExecuting: false,
-                results: { ...prev.results, aiAnalysis: aiAnalysisResult }
-            }));
-            
-            // Show success message with real results
-            alert(
-                `🤖 Claude Analysis Complete!\n\n` +
-                `Found: ${aiAnalysisResult.solutions.length} potential solutions\n` +
-                `Overall Confidence: ${aiAnalysisResult.overallConfidence}%\n` +
-                `Sources Analyzed: ${aiAnalysisResult.sourcesAnalyzed.stackOverflow + aiAnalysisResult.sourcesAnalyzed.github} items\n` +
-                `Processing Time: ${aiAnalysisResult.processingTime}`
-            );
-            
-            } catch (error: unknown) {
-            setAppState(prev => ({ ...prev, isExecuting: false }));
-            
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-            alert(`❌ Claude API Error: ${errorMessage}`);
-            }   
+                setAppState(prev => ({ 
+                  ...prev, 
+                  isExecuting: false,
+                  results: { ...prev.results, aiAnalysis: mockAIResponse }
+                }));
+                
+                alert(
+                  `🤖 AI Analysis Complete!\n\n` +
+                  `Found: ${mockAIResponse.solutions.length} potential solutions\n` +
+                  `Overall Confidence: ${mockAIResponse.overallConfidence}%\n` +
+                  `Sources Analyzed: ${mockAIResponse.sourcesAnalyzed.stackOverflow + mockAIResponse.sourcesAnalyzed.github} items\n` +
+                  `Processing Time: ${mockAIResponse.processingTime}`
+                );
+                
+              } catch (error: unknown) {
+                setAppState(prev => ({ ...prev, isExecuting: false }));
+                
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                alert(`❌ AI Analysis Error: ${errorMessage}`);
+              }
             }}
             disabled={appState.isExecuting}
             className="w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
@@ -1448,14 +1178,12 @@ const searchGitHub = async () => {
             )}
           </button>
 
-          {/* AI analysis results display */}
           {appState.results?.aiAnalysis && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
               <h4 className="font-semibold text-gray-800 mb-3">
                 🤖 AI Analysis Results ({appState.results.aiAnalysis.solutions?.length || 0} solutions)
               </h4>
               <div className="space-y-3">
-                {/* Render each AI-generated solution */}
                 {appState.results.aiAnalysis.solutions?.map((solution: any, index: number) => (
                   <div key={index} className="bg-white p-3 rounded border border-indigo-200">
                     <div className="flex justify-between items-start mb-2">
@@ -1477,242 +1205,38 @@ const searchGitHub = async () => {
       ),
       codeType: 'prompt'
     },
-    
-    // STEP 6: Results and Implementation
     {
-    id: 6,
-    title: "Results Dashboard & Implementation",
-    description: "View AI analysis results and implement solutions with confidence tracking",
-    content: (
+      id: 6,
+      title: "Response Processing & Results",
+      description: "Parse AI responses and present actionable solutions to CSE teams",
+      content: (
         <div className="space-y-4">
-        {/* Check if we have AI results to display */}
-        {!appState.results?.aiAnalysis ? (
-            <div className="text-center py-8">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-blue-800 mb-2">No Analysis Results Yet</h3>
-                <p className="text-blue-700 mb-4">
-                Complete the AI analysis in Step 5 to see detailed results here.
-                </p>
-                <button
-                onClick={() => setAppState(prev => ({ ...prev, currentStep: 5 }))}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                Go to Step 5
-                </button>
-            </div>
-            </div>
-        ) : (
-            <div className="space-y-6">
-            {/* Analysis Summary */}
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-900">🎯 Analysis Complete</h3>
-                <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                    <div className="text-2xl font-bold text-green-600">
-                        {appState.results.aiAnalysis.overallConfidence}%
-                    </div>
-                    <div className="text-sm text-gray-600">Confidence</div>
-                    </div>
-                    <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">
-                        {appState.results.aiAnalysis.solutions?.length || 0}
-                    </div>
-                    <div className="text-sm text-gray-600">Solutions</div>
-                    </div>
-                </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-lg border">
-                    <div className="text-sm text-gray-600">Time Estimate</div>
-                    <div className="text-lg font-semibold text-gray-900">
-                    {appState.results.aiAnalysis.estimatedTotalTime}
-                    </div>
-                </div>
-                <div className="bg-white p-4 rounded-lg border">
-                    <div className="text-sm text-gray-600">Recommended Approach</div>
-                    <div className="text-lg font-semibold text-gray-900">
-                    {appState.results.aiAnalysis.recommendedApproach?.substring(0, 30)}...
-                    </div>
-                </div>
-                <div className="bg-white p-4 rounded-lg border">
-                    <div className="text-sm text-gray-600">Sources Analyzed</div>
-                    <div className="text-lg font-semibold text-gray-900">
-                    {(appState.results.aiAnalysis.sourcesAnalyzed?.stackOverflow || 0) + 
-                    (appState.results.aiAnalysis.sourcesAnalyzed?.github || 0)} items
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            {/* Solutions List */}
-            <div className="space-y-4">
-                <h4 className="text-lg font-bold text-gray-900">💡 Recommended Solutions</h4>
-                {appState.results.aiAnalysis.solutions?.map((solution: any, index: number) => (
-                <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                    {/* Solution Header */}
-                    <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                        <span className="text-2xl">#{index + 1}</span>
-                        <h5 className="text-xl font-bold text-gray-900">{solution.title}</h5>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            solution.priority === 'high' ? 'bg-red-100 text-red-800' :
-                            solution.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                        }`}>
-                            {solution.priority?.toUpperCase()} PRIORITY
-                        </span>
-                        </div>
-                        <p className="text-gray-700 mb-3">{solution.description}</p>
-                    </div>
-                    <div className="text-right ml-4">
-                        <div className="text-3xl font-bold text-blue-600">{solution.confidence}%</div>
-                        <div className="text-sm text-gray-600">Confidence</div>
-                    </div>
-                    </div>
-
-                    {/* Solution Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <h6 className="font-semibold text-gray-900 mb-2">⏱️ Implementation Steps:</h6>
-                        <ol className="list-decimal list-inside space-y-1">
-                        {solution.steps?.map((step: string, stepIndex: number) => (
-                            <li key={stepIndex} className="text-sm text-gray-700">{step}</li>
-                        ))}
-                        </ol>
-                    </div>
-                    <div>
-                        <h6 className="font-semibold text-gray-900 mb-2">⚠️ Potential Risks:</h6>
-                        <ul className="list-disc list-inside space-y-1">
-                        {solution.risks?.map((risk: string, riskIndex: number) => (
-                            <li key={riskIndex} className="text-sm text-gray-700">{risk}</li>
-                        ))}
-                        </ul>
-                    </div>
-                    </div>
-
-                    {/* Code Example */}
-                    {solution.codeExample && (
-                    <div className="mb-4">
-                        <h6 className="font-semibold text-gray-900 mb-2">💻 Code Example:</h6>
-                        <div className="bg-gray-900 text-gray-100 p-3 rounded text-sm font-mono overflow-x-auto">
-                        {solution.codeExample}
-                        </div>
-                    </div>
-                    )}
-
-                    {/* Solution Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <span>🕒 {solution.estimatedTime}</span>
-                        <span>👥 {solution.applicability}</span>
-                    </div>
-                    <div className="flex space-x-2">
-                        <button
-                        onClick={() => {
-                            const solutionText = `SOLUTION: ${solution.title}\n\nDESCRIPTION: ${solution.description}\n\nSTEPS:\n${solution.steps?.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}\n\nCODE EXAMPLE:\n${solution.codeExample || 'No code example provided'}`;
-                            navigator.clipboard.writeText(solutionText);
-                            alert('Solution copied to clipboard!');
-                        }}
-                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                        >
-                        📋 Copy Solution
-                        </button>
-                        <button
-                        onClick={() => {
-                            alert(`Implementing solution: ${solution.title}\n\nThis would typically:\n• Create a ticket in your system\n• Assign to a developer\n• Track implementation progress`);
-                        }}
-                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                        >
-                        🚀 Implement
-                        </button>
-                    </div>
-                    </div>
-                </div>
-                ))}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                <h4 className="text-lg font-bold text-gray-900 mb-4">📊 Next Actions</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                    onClick={() => {
-                    const fullReport = `SMART TICKET ANALYSIS REPORT\n\nTicket: ${appState.userInputs.ticketDescription}\nPriority: ${appState.userInputs.priority}\nCustomer: ${appState.userInputs.customerTier}\n\nOVERALL CONFIDENCE: ${appState.results.aiAnalysis.overallConfidence}%\nESTIMATED TIME: ${appState.results.aiAnalysis.estimatedTotalTime}\n\nSOLUTIONS:\n${appState.results.aiAnalysis.solutions?.map((s: any, i: number) => `\n${i + 1}. ${s.title} (${s.confidence}% confidence)\n${s.description}\nSteps: ${s.steps?.join(', ')}`).join('\n')}`;
-                    navigator.clipboard.writeText(fullReport);
-                    alert('Full analysis report copied to clipboard!');
-                    }}
-                    className="p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center"
-                >
-                    📄 Export Full Report
-                </button>
-                <button
-                    onClick={() => {
-                    setAppState(prev => ({ 
-                        ...prev, 
-                        currentStep: 2,
-                        userInputs: {
-                        ticketDescription: '',
-                        priority: 'P2',
-                        customerTier: 'premium',
-                        techStack: [],
-                        additionalContext: ''
-                        },
-                        results: null
-                    }));
-                    }}
-                    className="p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 text-center"
-                >
-                    🎫 Analyze New Ticket
-                </button>
-                <button
-                    onClick={() => {
-                    alert('Time Saved Analysis:\n\n• Manual Process: 60+ minutes\n• AI-Powered Process: 3-5 minutes\n• Time Savings: 55+ minutes (90%+)\n• Confidence: Higher quality solutions\n• Consistency: Standardized approach');
-                    }}
-                    className="p-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-center"
-                >
-                    📈 View Time Savings
-                </button>
-                </div>
-            </div>
-            </div>
-        )}
+          <p className="text-gray-600">
+            The final step is processing the AI response and presenting results.
+          </p>
         </div>
-    ),
-    codeType: 'complete'
+      ),
+      codeType: 'complete'
     }
   ];
 
-  // ========================================
-  // TUTORIAL NAVIGATION
-  // ========================================
-  // Get current step data and set up navigation
   const currentStepData = steps.find(step => step.id === appState.currentStep);
   const totalSteps = steps.length;
 
-  // Navigate to next step
   const nextStep = () => {
     if (appState.currentStep < totalSteps) {
       setAppState(prev => ({ ...prev, currentStep: prev.currentStep + 1 }));
     }
   };
 
-  // Navigate to previous step
   const prevStep = () => {
     if (appState.currentStep > 1) {
       setAppState(prev => ({ ...prev, currentStep: prev.currentStep - 1 }));
     }
   };
 
-  // ========================================
-  // CODE GENERATION LOGIC
-  // ========================================
-  // Generate different code samples based on current step and configuration
   const getCurrentCode = () => {
     switch (currentStepData?.codeType) {
-      // Step 1: Basic setup code
       case 'setup':
         return `// Smart Ticket Analyzer - Initial Setup
 const SupportTicketAnalyzer = {
@@ -1727,11 +1251,9 @@ const SupportTicketAnalyzer = {
   }
 };`;
       
-      // Steps 2-4: API integration code
       case 'api':
         return appState.generatedCode.apiCall;
       
-      // Step 5: AI prompt engineering code
       case 'prompt':
         const soResultsCount = appState.results?.stackOverflow?.items?.length || 0;
         const githubResultsCount = appState.results?.github?.items?.length || 0;
@@ -1745,15 +1267,14 @@ const SupportTicketAnalyzer = {
         if (soResultsCount > 0) contextSources.push(`${soResultsCount} Stack Overflow questions`);
         if (githubResultsCount > 0) contextSources.push(`${githubResultsCount} GitHub code examples`);
         
-        // Generate dynamic AI prompt based on current configuration
         return `// AI Analysis Request - Dynamic Prompt Generation
 const analyzeTicketWithAI = async (ticketData, apiResults) => {
-  // 🎯 ROLE DEFINITION - Sets up the AI's persona and expertise
+  // 🎯 ROLE DEFINITION
   const roleDefinition = \`You are a senior software support engineer with 10+ years of experience.
 Your expertise includes debugging complex technical issues, analyzing Stack Overflow solutions,
 and providing actionable guidance to customer support teams.\`;
 
-  // 📊 CONTEXT INJECTION - Combines ticket data with API research results
+  // 📊 CONTEXT INJECTION
   const contextData = {
     ticket: {
       description: ticketData.ticketDescription,
@@ -1768,7 +1289,7 @@ and providing actionable guidance to customer support teams.\`;
     }
   };
 
-  // 🎯 TASK SPECIFICATION - Clear instructions for what we want the AI to do
+  // 🎯 TASK SPECIFICATION
   const taskInstructions = \`
 TASK: Analyze the support ticket and provide prioritized solutions.
 
@@ -1784,7 +1305,7 @@ CONTEXT SOURCES:
 ${contextSources.length > 0 ? contextSources.map((source, i) => `${i + 1}. ${source}`).join('\\n') : 'No external research data available - base analysis on knowledge only'}
 \`;
 
-  // 📋 OUTPUT FORMAT SPECIFICATION - Ensures consistent, parseable responses
+  // 📋 OUTPUT FORMAT SPECIFICATION  
   const outputFormat = \`
 REQUIRED JSON RESPONSE FORMAT:
 {
@@ -1807,7 +1328,7 @@ REQUIRED JSON RESPONSE FORMAT:
   "estimatedTotalTime": "30-45 minutes"
 }\`;
 
-  // 🚀 COMPLETE PROMPT ASSEMBLY - Combines all components into final prompt
+  // 🚀 COMPLETE PROMPT ASSEMBLY
   const fullPrompt = \`\${roleDefinition}
 
 \${taskInstructions}
@@ -1819,7 +1340,7 @@ TICKET CONTEXT:
 
 IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
 
-  // 📡 API REQUEST CONFIGURATION - Sets up the AI API call
+  // 📡 API REQUEST CONFIGURATION
   const aiRequest = {
     model: "${model}",
     temperature: ${temperature},
@@ -1836,7 +1357,7 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
     ]
   };
 
-  // 📤 SEND REQUEST - Makes the actual API call to AI service
+  // 📤 SEND REQUEST
   const response = await fetch('/api/ai-analyze', {
     method: 'POST',
     headers: { 
@@ -1852,7 +1373,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
 
   const result = await response.json();
   
-  // 📊 RETURN ENRICHED RESPONSE - Adds metadata about the analysis
   return {
     ...result,
     metadata: {
@@ -1863,284 +1383,45 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
   };
 };`;  
       
-      // Step 6: Complete implementation overview
-     // Step 6: Complete implementation overview
-    case 'complete':
-    return `// COMPLETE SMART TICKET ANALYZER IMPLEMENTATION
-    // Production-ready system for automated support ticket analysis
-
-    class SmartTicketAnalyzer {
-    constructor(config) {
-        this.apiEndpoints = {
-        stackOverflow: 'https://api.stackexchange.com/2.3',
-        github: 'https://api.github.com/search', 
-        claudeProxy: config.claudeProxyUrl, // Your AWS Lambda endpoint
-        ticketSystem: config.ticketSystemUrl // Integration with Zendesk/ServiceNow
-        };
-        this.analytics = new AnalyticsTracker();
-    }
-
-    // MAIN WORKFLOW: Process incoming support ticket
-    async processTicket(ticketData) {
-        const startTime = Date.now();
-        console.log('🎫 Processing ticket:', ticketData.id);
-        
-        try {
-        // STEP 1: Parallel API research (saves time)
-        const [stackOverflowResults, githubResults] = await Promise.all([
-            this.searchStackOverflow(ticketData.description),
-            this.searchGitHub(ticketData.description, ticketData.techStack)
-        ]);
-
-        // STEP 2: AI Analysis with gathered context
-        const aiAnalysis = await this.analyzeWithClaude({
-            ticket: ticketData,
-            research: {
-            stackOverflow: stackOverflowResults,
-            github: githubResults
-            }
-        });
-
-        // STEP 3: Post-process and enhance results
-        const enhancedResults = await this.enhanceResults(aiAnalysis, ticketData);
-
-        // STEP 4: Update ticket system and notify CSE
-        await this.updateTicketSystem(ticketData.id, enhancedResults);
-        
-        const processingTime = Date.now() - startTime;
-        
-        // STEP 5: Track analytics and performance
-        this.analytics.track({
-            ticketId: ticketData.id,
-            processingTime,
-            confidence: enhancedResults.overallConfidence,
-            solutionsFound: enhancedResults.solutions.length,
-            timeReduction: this.calculateTimeSaved(processingTime)
-        });
-
-        return {
-            success: true,
-            ticketId: ticketData.id,
-            results: enhancedResults,
-            performance: {
-            processingTime: \`\${processingTime}ms\`,
-            timeReduction: '90%+',
-            apiCallsMade: 3,
-            sourcesAnalyzed: stackOverflowResults.total + githubResults.total_count
-            }
-        };
-
-        } catch (error) {
-        console.error('❌ Ticket processing failed:', error);
-        await this.handleError(ticketData.id, error);
-        throw error;
-        }
-    }
-
-    // ADVANCED: Batch processing for high-volume support teams
-    async processBatch(tickets) {
-        console.log(\`📦 Processing batch of \${tickets.length} tickets\`);
-        
-        const results = await Promise.allSettled(
-        tickets.map(ticket => this.processTicket(ticket))
-        );
-
-        const successful = results.filter(r => r.status === 'fulfilled').length;
-        const failed = results.filter(r => r.status === 'rejected').length;
-
-        return {
-        processed: tickets.length,
-        successful,
-        failed,
-        successRate: \`\${(successful / tickets.length * 100).toFixed(1)}%\`,
-        results: results.map(r => r.status === 'fulfilled' ? r.value : r.reason)
-        };
-    }
-
-    // INTEGRATION: Real-world ticket system webhook
-    async handleWebhook(webhookData) {
-        // Automatically process tickets as they come in
-        if (webhookData.event === 'ticket.created') {
-        const ticket = this.parseTicketFromWebhook(webhookData);
-        
-        // Only auto-process certain priority levels
-        if (['P1', 'P2'].includes(ticket.priority)) {
-            return await this.processTicket(ticket);
-        }
-        }
-    }
-
-    // ANALYTICS: Generate performance reports
-    generateReport(timeframe = '30d') {
-        return {
-        timeReduction: {
-            average: '87%',
-            total: '2,340 hours saved',
-            perTicket: '52 minutes average'
-        },
-        qualityMetrics: {
-            averageConfidence: '89%',
-            cseApprovalRate: '94%',
-            customerSatisfactionIncrease: '+23%'
-        },
-        usage: {
-            ticketsProcessed: 1247,
-            apiCalls: 3741,
-            cost: '$47.82',
-            costPerTicket: '$0.038'
-        }
-        };
-    }
-
-    // PRIVATE METHODS: Core functionality
-    async searchStackOverflow(query) {
-        const response = await fetch(
-        \`\${this.apiEndpoints.stackOverflow}/search?order=desc&sort=relevance&site=stackoverflow&intitle=\${encodeURIComponent(query)}&pagesize=10&answered=true\`
-        );
-        return response.json();
-    }
-
-    async searchGitHub(query, techStack) {
-        const language = this.detectPrimaryLanguage(techStack);
-        const searchQuery = \`\${query} language:\${language}\`;
-        
-        const response = await fetch(
-        \`\${this.apiEndpoints.github}/code?q=\${encodeURIComponent(searchQuery)}&per_page=15\`
-        );
-        return response.json();
-    }
-
-    async analyzeWithClaude(contextData) {
-        const response = await fetch(this.apiEndpoints.claudeProxy, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            prompt: this.buildAnalysisPrompt(contextData),
-            model: 'claude-3-5-sonnet-20241022',
-            temperature: 0.3,
-            maxTokens: 1500
-        })
-        });
-        
-        return response.json();
-    }
-
-    buildAnalysisPrompt(contextData) {
-        return \`You are a senior software support engineer analyzing: \${contextData.ticket.description}
-        
-    Context: \${contextData.research.stackOverflow.items?.length || 0} Stack Overflow solutions found
-    Tech Stack: \${contextData.ticket.techStack.join(', ')}
-    Priority: \${contextData.ticket.priority} (\${contextData.ticket.customerTier} customer)
-
-    Provide JSON with solutions, confidence scores, and implementation steps.\`;
-    }
-
-    calculateTimeSaved(processingTime) {
-        const manualTime = 60 * 60 * 1000; // 60 minutes in ms
-        const saved = manualTime - processingTime;
-        return Math.round((saved / manualTime) * 100);
-    }
-    }
-
-    // USAGE EXAMPLES:
-
-    // 1. Single ticket processing
-    const analyzer = new SmartTicketAnalyzer({
-    claudeProxyUrl: 'https://your-lambda-url.amazonaws.com/claudeProxy',
-    ticketSystemUrl: 'https://your-company.zendesk.com/api'
-    });
-
-    const result = await analyzer.processTicket({
-    id: 'TICK-12345',
-    description: '${appState.userInputs.ticketDescription || 'React component not re-rendering'}',
-    priority: '${appState.userInputs.priority}',
-    customerTier: '${appState.userInputs.customerTier}',
-    techStack: ${JSON.stringify(appState.userInputs.techStack)}
-    });
-
-    console.log(\`✅ Ticket \${result.ticketId} processed in \${result.performance.processingTime}\`);
-    console.log(\`📊 Found \${result.results.solutions.length} solutions with \${result.results.overallConfidence}% confidence\`);
-
-    // 2. Webhook integration for automatic processing
-    app.post('/webhook/tickets', async (req, res) => {
-    try {
-        const result = await analyzer.handleWebhook(req.body);
-        res.json({ success: true, result });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-    });
-
-    // 3. Generate analytics dashboard
-    const monthlyReport = analyzer.generateReport('30d');
-    console.log('📈 Monthly Performance:', monthlyReport);
-
-    /* 
-    🎯 PRODUCTION DEPLOYMENT CHECKLIST:
-
-    ✅ AWS Lambda function deployed with proper timeout (30s)
-    ✅ API Gateway configured with CORS
-    ✅ Environment variables set (ANTHROPIC_API_KEY)
-    ✅ Error handling and logging implemented
-    ✅ Rate limiting configured for API calls
-    ✅ Monitoring and alerting set up
-    ✅ Integration with existing ticket system
-    ✅ CSE training completed
-    ✅ Performance metrics baseline established
-
-    📊 EXPECTED RESULTS:
-    - 90%+ time reduction per ticket
-    - 87% average solution confidence
-    - $47.82/month operational cost
-    - 2,340+ hours saved annually
-    - 94% CSE approval rate
-    - +23% customer satisfaction increase
-
-    🚀 NEXT STEPS:
-    1. Deploy to staging environment
-    2. Run pilot with 5-10 CSEs
-    3. Gather feedback and iterate
-    4. Full rollout to support team
-    5. Expand to other departments
-    */`;
+      case 'complete':
+        return `// Complete Implementation
+const processTicket = async (ticketData) => {
+  const soResults = await searchStackOverflow();
+  const githubResults = await searchGitHub();
+  const aiAnalysis = await analyzeWithAI(ticketData, { soResults, githubResults });
+  
+  return {
+    success: true,
+    solutions: aiAnalysis.solutions,
+    timeReduction: '90%'
+  };
+};`;
       
-      // Default fallback
       default:
         return '// Code will appear here as you progress through the tutorial';
     }
   };
 
-  // ========================================
-  // MAIN COMPONENT RENDER
-  // ========================================
   return (
     <div className="h-screen flex bg-gray-50">
-      {/* LEFT PANEL: Tutorial Content and Navigation */}
       <div className="w-2/5 bg-white border-r border-gray-200 flex flex-col max-h-screen">
-        {/* SCROLLABLE CONTENT AREA */}
         <div className="p-6 flex-1 overflow-y-auto">
-          {/* Step progress indicator */}
           <StepHeader step={appState.currentStep} total={totalSteps} />
           
-          {/* Current step title */}
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {currentStepData?.title}
           </h1>
           
-          {/* Current step description */}
           <p className="text-gray-600 mb-6">
             {currentStepData?.description}
           </p>
           
-          {/* Dynamic step content (forms, explanations, controls) */}
           <div className="space-y-4">
             {currentStepData?.content}
           </div>
         </div>
         
-        {/* FIXED NAVIGATION BAR */}
         <div className="p-4 border-t border-gray-200 flex justify-between bg-white">
-          {/* Previous step button */}
           <button
             onClick={prevStep}
             disabled={appState.currentStep === 1}
@@ -2150,7 +1431,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
             Previous
           </button>
           
-          {/* Next step button */}
           <button
             onClick={nextStep}
             disabled={appState.currentStep === totalSteps}
@@ -2162,19 +1442,14 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
         </div>
       </div>
       
-      {/* RIGHT PANEL: Code Display and Results */}
       <div className="w-3/5 bg-gray-900 flex flex-col">
         <div className="p-6 flex-1 overflow-y-auto text-left">
-          {/* MAIN CODE DISPLAY - Always shows current step's code */}
           <CodeBlock
             title="Generated Code"
             code={getCurrentCode()}
             language="javascript"
           />
           
-          {/* CONDITIONAL API RESPONSE DISPLAYS - Show when relevant data exists */}
-          
-          {/* Stack Overflow API Response (Step 3) */}
           {appState.results?.stackOverflow && appState.currentStep === 3 && (
             <CodeBlock
               title="📡 Stack Overflow API Response"
@@ -2183,7 +1458,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
             />
           )}
 
-          {/* GitHub API Response (Step 4) */}
           {appState.results?.github && appState.currentStep === 4 && (
             <CodeBlock
               title="📁 GitHub API Response"
@@ -2192,7 +1466,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
             />
           )}
 
-          {/* AI Analysis Response (Step 5) */}
           {appState.results?.aiAnalysis && appState.currentStep === 5 && (
             <CodeBlock
               title="🤖 AI Analysis Response"
@@ -2201,9 +1474,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
             />
           )}
           
-          {/* API USAGE STATISTICS PANELS */}
-          
-          {/* Stack Overflow API Usage Stats */}
           {appState.results?.stackOverflow && appState.currentStep === 3 && (
             <div className="mt-4 p-4 bg-gray-800 rounded-lg text-left">
               <h3 className="text-white font-semibold mb-2 text-left">📊 Stack Overflow API Usage</h3>
@@ -2226,7 +1496,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
             </div>
           )}
 
-          {/* GitHub API Usage Stats */}
           {appState.results?.github && appState.currentStep === 4 && (
             <div className="mt-4 p-4 bg-gray-800 rounded-lg text-left">
               <h3 className="text-white font-semibold mb-2 text-left">📁 GitHub API Usage</h3>
@@ -2249,7 +1518,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
             </div>
           )}
 
-          {/* AI Analysis Results Stats */}
           {appState.results?.aiAnalysis && appState.currentStep === 5 && (
             <div className="mt-4 p-4 bg-gray-800 rounded-lg text-left">
               <h3 className="text-white font-semibold mb-2 text-left">🤖 AI Analysis Results</h3>
@@ -2270,7 +1538,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
             </div>
           )}
 
-          {/* User Input Data Preview (Step 2) */}
           {appState.currentStep === 2 && (
             <div className="mt-4 p-4 bg-gray-800 rounded-lg text-left">
               <h3 className="text-white font-semibold mb-2 text-left">Data Structure Preview</h3>
@@ -2285,7 +1552,6 @@ IMPORTANT: Respond ONLY with valid JSON. No additional text or explanations.\`;
   );
 };
 
-// ============================================================================
-// EXPORT
-// ============================================================================
 export default SmartTicketAnalyzer;
+
+
