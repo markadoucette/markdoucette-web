@@ -501,7 +501,7 @@ const searchGitHub = async () => {
   }
   
   if (fileExts.length > 0) {
-    const extQuery = fileExts.map(ext => 'extension:' + ext).join(' OR ');
+    const extQuery = fileExts.map(ext => 'filename:*.' + ext).join(' OR ');
     searchQuery += ' (' + extQuery + ')';
   }
 
@@ -509,7 +509,7 @@ const searchGitHub = async () => {
 
   const response = await fetch(apiUrl, {
     headers: {
-      'Authorization': 'token ' + ((window as any).process?.env?.VITE_GITHUB_TOKEN || 'your-github-token-here'),
+      'Authorization': 'token ' + import.meta.env.VITE_GITHUB_TOKEN,
       'Accept': 'application/vnd.github.v3+json'
     }
   });
@@ -584,13 +584,6 @@ const searchGitHub = async () => {
               <li>• Consistent, high-quality analysis every time</li>
               <li>• <strong>Result: 3-5 minutes per ticket, 90%+ time savings</strong></li>
             </ul>
-          </div>
-
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-left">
-            <h3 className="font-semibold text-purple-800 mb-2 text-left">Why I Built This</h3>
-            <p className="text-purple-700 text-sm text-left">
-              "This is just how my brain works. When I see someone wrestling with a puzzle, I love jumping in to help work through it."
-            </p>
           </div>
         </div>
       ),
@@ -1017,9 +1010,9 @@ const searchGitHub = async () => {
               setAppState(prev => ({ ...prev, isExecuting: true }));
               
               try {
-                // Use window object to access environment variables in browser
-                const token = (window as any).process?.env?.VITE_GITHUB_TOKEN || 'your-github-token-here';
-                if (!token || token === 'your-github-token-here') {
+                // Use import.meta.env for Vite environment variables
+                const token = import.meta.env.VITE_GITHUB_TOKEN;
+                if (!token) {
                   throw new Error('GitHub token not found - please set VITE_GITHUB_TOKEN environment variable');
                 }
 
@@ -1344,7 +1337,7 @@ const searchGitHub = async () => {
             "estimatedTotalTime": "30-45 minutes"
             }`;
 
-            const response = await fetch((window as any).process?.env?.VITE_CLAUDE_API_URL || '/api/claude-analyze', {
+            const response = await fetch(import.meta.env.VITE_CLAUDE_API_URL || '/api/claude-analyze', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
