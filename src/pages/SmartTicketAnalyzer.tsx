@@ -509,7 +509,7 @@ const searchGitHub = async () => {
 
   const response = await fetch(apiUrl, {
     headers: {
-      'Authorization': 'token ' + (process.env.VITE_GITHUB_TOKEN || 'your-github-token-here'),
+      'Authorization': 'token ' + ((window as any).process?.env?.VITE_GITHUB_TOKEN || 'your-github-token-here'),
       'Accept': 'application/vnd.github.v3+json'
     }
   });
@@ -1017,7 +1017,8 @@ const searchGitHub = async () => {
               setAppState(prev => ({ ...prev, isExecuting: true }));
               
               try {
-                const token = process.env.VITE_GITHUB_TOKEN || 'your-github-token-here';
+                // Use window object to access environment variables in browser
+                const token = (window as any).process?.env?.VITE_GITHUB_TOKEN || 'your-github-token-here';
                 if (!token || token === 'your-github-token-here') {
                   throw new Error('GitHub token not found - please set VITE_GITHUB_TOKEN environment variable');
                 }
@@ -1043,7 +1044,6 @@ const searchGitHub = async () => {
                 });
                 
                 if (!response.ok) {
-                  const errorText = await response.text();
                   throw new Error(`GitHub API Error: ${response.status} ${response.statusText}`);
                 }
                 
@@ -1344,7 +1344,7 @@ const searchGitHub = async () => {
             "estimatedTotalTime": "30-45 minutes"
             }`;
 
-            const response = await fetch(process.env.VITE_CLAUDE_API_URL || '/api/claude-analyze', {
+            const response = await fetch((window as any).process?.env?.VITE_CLAUDE_API_URL || '/api/claude-analyze', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1386,11 +1386,14 @@ const searchGitHub = async () => {
                 results: { ...prev.results, aiAnalysis: aiAnalysisResult }
             }));
             
+            const sourcesAnalyzed = aiAnalysisResult.sourcesAnalyzed ? 
+                aiAnalysisResult.sourcesAnalyzed.stackOverflow + aiAnalysisResult.sourcesAnalyzed.github : 0;
+            
             alert(
                 `🤖 Claude Analysis Complete!\n\n` +
                 `Found: ${aiAnalysisResult.solutions.length} potential solutions\n` +
                 `Overall Confidence: ${aiAnalysisResult.overallConfidence}%\n` +
-                `Sources Analyzed: ${aiAnalysisResult.sourcesAnalyzed.stackOverflow + aiAnalysisResult.sourcesAnalyzed.github} items\n` +
+                `Sources Analyzed: ${sourcesAnalyzed} items\n` +
                 `Processing Time: ${aiAnalysisResult.processingTime}`
             );
             
