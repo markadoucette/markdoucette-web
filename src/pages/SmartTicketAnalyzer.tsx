@@ -1386,8 +1386,9 @@ const searchGitHub = async () => {
                 results: { ...prev.results, aiAnalysis: aiAnalysisResult }
             }));
             
+            // Calculate sources analyzed safely
             const sourcesAnalyzed = aiAnalysisResult.sourcesAnalyzed ? 
-                aiAnalysisResult.sourcesAnalyzed.stackOverflow + aiAnalysisResult.sourcesAnalyzed.github : 0;
+                (aiAnalysisResult.sourcesAnalyzed.stackOverflow || 0) + (aiAnalysisResult.sourcesAnalyzed.github || 0) : 0;
             
             alert(
                 `🤖 Claude Analysis Complete!\n\n` +
@@ -1506,8 +1507,8 @@ const searchGitHub = async () => {
                 <div className="bg-white p-4 rounded-lg border">
                     <div className="text-sm text-gray-600">Sources Analyzed</div>
                     <div className="text-lg font-semibold text-gray-900">
-                    {(appState.results.aiAnalysis.sourcesAnalyzed?.stackOverflow || 0) + 
-                    (appState.results.aiAnalysis.sourcesAnalyzed?.github || 0)} items
+                    {((appState.results?.aiAnalysis?.sourcesAnalyzed?.stackOverflow || 0) + 
+                    (appState.results?.aiAnalysis?.sourcesAnalyzed?.github || 0))} items
                     </div>
                 </div>
                 </div>
@@ -1601,7 +1602,7 @@ const searchGitHub = async () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                     onClick={() => {
-                    const fullReport = `SMART TICKET ANALYSIS REPORT\n\nTicket: ${appState.userInputs.ticketDescription}\nPriority: ${appState.userInputs.priority}\nCustomer: ${appState.userInputs.customerTier}\n\nOVERALL CONFIDENCE: ${appState.results.aiAnalysis.overallConfidence}%\nESTIMATED TIME: ${appState.results.aiAnalysis.estimatedTotalTime}\n\nSOLUTIONS:\n${appState.results.aiAnalysis.solutions?.map((s: any, i: number) => `\n${i + 1}. ${s.title} (${s.confidence}% confidence)\n${s.description}\nSteps: ${s.steps?.join(', ')}`).join('\n')}`;
+                    const fullReport = `SMART TICKET ANALYSIS REPORT\n\nTicket: ${appState.userInputs.ticketDescription}\nPriority: ${appState.userInputs.priority}\nCustomer: ${appState.userInputs.customerTier}\n\nOVERALL CONFIDENCE: ${appState.results?.aiAnalysis?.overallConfidence || 0}%\nESTIMATED TIME: ${appState.results?.aiAnalysis?.estimatedTotalTime || 'Unknown'}\n\nSOLUTIONS:\n${appState.results?.aiAnalysis?.solutions?.map((s: any, i: number) => `\n${i + 1}. ${s.title} (${s.confidence}% confidence)\n${s.description}\nSteps: ${s.steps?.join(', ')}`).join('\n') || 'No solutions available'}`;
                     navigator.clipboard.writeText(fullReport);
                     alert('Full analysis report copied to clipboard!');
                     }}
